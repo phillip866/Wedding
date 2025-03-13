@@ -55,7 +55,17 @@ export class MemStorage implements IStorage {
 
   async createGuest(guest: InsertGuest): Promise<Guest> {
     const id = this.guestId++;
-    const newGuest = { ...guest, id };
+    const newGuest: Guest = {
+      id,
+      name: guest.name,
+      email: guest.email ?? null,
+      phone: guest.phone ?? null,
+      category: guest.category,
+      rsvpStatus: guest.rsvpStatus ?? null,
+      plusOne: guest.plusOne ?? null,
+      dietaryRestrictions: guest.dietaryRestrictions ?? null,
+      notes: guest.notes ?? null
+    };
     this.guests.set(id, newGuest);
     return newGuest;
   }
@@ -63,7 +73,16 @@ export class MemStorage implements IStorage {
   async updateGuest(id: number, guest: Partial<InsertGuest>): Promise<Guest | undefined> {
     const existing = this.guests.get(id);
     if (!existing) return undefined;
-    const updated = { ...existing, ...guest };
+    const updated: Guest = {
+      ...existing,
+      ...guest,
+      email: guest.email ?? existing.email,
+      phone: guest.phone ?? existing.phone,
+      rsvpStatus: guest.rsvpStatus ?? existing.rsvpStatus,
+      plusOne: guest.plusOne ?? existing.plusOne,
+      dietaryRestrictions: guest.dietaryRestrictions ?? existing.dietaryRestrictions,
+      notes: guest.notes ?? existing.notes
+    };
     this.guests.set(id, updated);
     return updated;
   }
@@ -83,7 +102,15 @@ export class MemStorage implements IStorage {
 
   async createBudgetItem(item: InsertBudgetItem): Promise<BudgetItem> {
     const id = this.budgetId++;
-    const newItem = { ...item, id };
+    const newItem: BudgetItem = {
+      id,
+      category: item.category,
+      description: item.description,
+      estimatedAmount: item.estimatedAmount,
+      dueDate: item.dueDate ?? null,
+      actualAmount: item.actualAmount ?? null,
+      paid: item.paid ?? null
+    };
     this.budgetItems.set(id, newItem);
     return newItem;
   }
@@ -91,7 +118,13 @@ export class MemStorage implements IStorage {
   async updateBudgetItem(id: number, item: Partial<InsertBudgetItem>): Promise<BudgetItem | undefined> {
     const existing = this.budgetItems.get(id);
     if (!existing) return undefined;
-    const updated = { ...existing, ...item };
+    const updated: BudgetItem = {
+      ...existing,
+      ...item,
+      dueDate: item.dueDate ?? existing.dueDate,
+      actualAmount: item.actualAmount ?? existing.actualAmount,
+      paid: item.paid ?? existing.paid
+    };
     this.budgetItems.set(id, updated);
     return updated;
   }
@@ -111,7 +144,14 @@ export class MemStorage implements IStorage {
 
   async createTask(task: InsertTask): Promise<Task> {
     const id = this.taskId++;
-    const newTask = { ...task, id };
+    const newTask: Task = {
+      id,
+      title: task.title,
+      description: task.description ?? null,
+      dueDate: task.dueDate ?? null,
+      completed: task.completed ?? null,
+      priority: task.priority ?? null
+    };
     this.tasks.set(id, newTask);
     return newTask;
   }
@@ -119,7 +159,14 @@ export class MemStorage implements IStorage {
   async updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined> {
     const existing = this.tasks.get(id);
     if (!existing) return undefined;
-    const updated = { ...existing, ...task };
+    const updated: Task = {
+      ...existing,
+      ...task,
+      description: task.description ?? existing.description,
+      dueDate: task.dueDate ?? existing.dueDate,
+      completed: task.completed ?? existing.completed,
+      priority: task.priority ?? existing.priority
+    };
     this.tasks.set(id, updated);
     return updated;
   }

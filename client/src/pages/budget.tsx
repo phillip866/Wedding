@@ -41,8 +41,13 @@ export default function Budget() {
   });
 
   const createBudgetItem = useMutation({
-    mutationFn: async (data: BudgetItem) => {
-      const res = await apiRequest("POST", "/api/budget", data);
+    mutationFn: async (data: typeof form.defaultValues) => {
+      const res = await apiRequest("POST", "/api/budget", {
+        ...data,
+        dueDate: data.dueDate?.toISOString(),
+        estimatedAmount: data.estimatedAmount.toString(),
+        actualAmount: data.actualAmount?.toString() || null
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -135,7 +140,9 @@ export default function Budget() {
               <TableRow key={item.id}>
                 <TableCell className="capitalize">{item.category}</TableCell>
                 <TableCell>{item.description}</TableCell>
-                <TableCell>{format(new Date(item.dueDate), "MMM d, yyyy")}</TableCell>
+                <TableCell>
+                  {item.dueDate ? format(new Date(item.dueDate), "MMM d, yyyy") : "-"}
+                </TableCell>
                 <TableCell>${Number(item.estimatedAmount).toLocaleString()}</TableCell>
                 <TableCell>${Number(item.actualAmount || 0).toLocaleString()}</TableCell>
                 <TableCell>
@@ -210,7 +217,7 @@ export default function Budget() {
                     <FormControl>
                       <Input 
                         type="number" 
-                        {...field} 
+                        {...field}
                         onChange={e => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>

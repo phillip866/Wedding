@@ -43,8 +43,11 @@ export default function Tasks() {
   });
 
   const createTask = useMutation({
-    mutationFn: async (data: Task) => {
-      const res = await apiRequest("POST", "/api/tasks", data);
+    mutationFn: async (data: typeof form.defaultValues) => {
+      const res = await apiRequest("POST", "/api/tasks", {
+        ...data,
+        dueDate: data.dueDate?.toISOString(),
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -77,7 +80,7 @@ export default function Tasks() {
       description: "",
       dueDate: new Date(),
       completed: false,
-      priority: "medium"
+      priority: "medium" as const
     }
   });
 
@@ -86,7 +89,7 @@ export default function Tasks() {
     if (filter === "pending") return !task.completed;
     return true;
   }).sort((a, b) => {
-    // Sort by due date
+    if (!a.dueDate || !b.dueDate) return 0;
     return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
   });
 
@@ -94,7 +97,7 @@ export default function Tasks() {
     high: "destructive",
     medium: "default",
     low: "secondary"
-  };
+  } as const;
 
   return (
     <div className="space-y-8">
@@ -136,9 +139,9 @@ export default function Tasks() {
               <TableRow key={task.id} className={task.completed ? "opacity-50" : ""}>
                 <TableCell>
                   <Checkbox
-                    checked={task.completed}
+                    checked={task.completed || false}
                     onCheckedChange={(checked) => 
-                      toggleComplete.mutate({ id: task.id, completed: checked as boolean })
+                      toggleComplete.mutate({ id: task.id, completed: !!checked })
                     }
                   />
                 </TableCell>
@@ -146,13 +149,15 @@ export default function Tasks() {
                   {task.title}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={priorityColors[task.priority as keyof typeof priorityColors]}>
-                    {task.priority}
+                  <Badge variant={priorityColors[task.priority as keyof typeof priorityColors] || "default"}>
+                    {task.priority || "medium"}
                   </Badge>
                 </TableCell>
-                <TableCell>{format(new Date(task.dueDate), "MMM d, yyyy")}</TableCell>
+                <TableCell>
+                  {task.dueDate ? format(new Date(task.dueDate), "MMM d, yyyy") : "-"}
+                </TableCell>
                 <TableCell className="max-w-xs truncate">
-                  {task.description}
+                  {task.description || "-"}
                 </TableCell>
               </TableRow>
             ))}

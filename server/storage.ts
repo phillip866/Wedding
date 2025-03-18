@@ -1,7 +1,8 @@
 import { 
   type Guest, type InsertGuest,
   type BudgetItem, type InsertBudgetItem,
-  type Task, type InsertTask
+  type Task, type InsertTask,
+  type Vendor, type InsertVendor
 } from "@shared/schema";
 
 export interface IStorage {
@@ -25,23 +26,34 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
+
+  // Vendor Management
+  getVendors(): Promise<Vendor[]>;
+  getVendor(id: number): Promise<Vendor | undefined>;
+  createVendor(vendor: InsertVendor): Promise<Vendor>;
+  updateVendor(id: number, vendor: Partial<InsertVendor>): Promise<Vendor | undefined>;
+  deleteVendor(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private guests: Map<number, Guest>;
   private budgetItems: Map<number, BudgetItem>;
   private tasks: Map<number, Task>;
+  private vendors: Map<number, Vendor>;
   private guestId: number;
   private budgetId: number;
   private taskId: number;
+  private vendorId: number;
 
   constructor() {
     this.guests = new Map();
     this.budgetItems = new Map();
     this.tasks = new Map();
+    this.vendors = new Map();
     this.guestId = 1;
     this.budgetId = 1;
     this.taskId = 1;
+    this.vendorId = 1;
   }
 
   // Guest Management
@@ -173,6 +185,53 @@ export class MemStorage implements IStorage {
 
   async deleteTask(id: number): Promise<boolean> {
     return this.tasks.delete(id);
+  }
+
+  // Vendor Management
+  async getVendors(): Promise<Vendor[]> {
+    return Array.from(this.vendors.values());
+  }
+
+  async getVendor(id: number): Promise<Vendor | undefined> {
+    return this.vendors.get(id);
+  }
+
+  async createVendor(vendor: InsertVendor): Promise<Vendor> {
+    const id = this.vendorId++;
+    const newVendor: Vendor = {
+      id,
+      name: vendor.name,
+      category: vendor.category,
+      email: vendor.email ?? null,
+      phone: vendor.phone ?? null,
+      website: vendor.website ?? null,
+      address: vendor.address ?? null,
+      notes: vendor.notes ?? null,
+      appointmentDate: vendor.appointmentDate ?? null
+    };
+    this.vendors.set(id, newVendor);
+    return newVendor;
+  }
+
+  async updateVendor(id: number, vendor: Partial<InsertVendor>): Promise<Vendor | undefined> {
+    const existing = this.vendors.get(id);
+    if (!existing) return undefined;
+    const updated: Vendor = {
+      ...existing,
+      ...vendor,
+      email: vendor.email ?? existing.email,
+      phone: vendor.phone ?? existing.phone,
+      website: vendor.website ?? existing.website,
+      address: vendor.address ?? existing.address,
+      notes: vendor.notes ?? existing.notes,
+      appointmentDate: vendor.appointmentDate ?? existing.appointmentDate
+    };
+    this.vendors.set(id, updated);
+    return updated;
+  }
+
+  async deleteVendor(id: number): Promise<boolean> {
+    return this.vendors.delete(id);
   }
 }
 

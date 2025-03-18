@@ -36,15 +36,31 @@ export const tasks = pgTable("tasks", {
   priority: text("priority").default("medium") // low, medium, high
 });
 
+// Vendors
+export const vendors = pgTable("vendors", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // Photographer, Caterer, Venue, etc.
+  email: text("email"),
+  phone: text("phone"),
+  website: text("website"),
+  address: text("address"),
+  notes: text("notes"),
+  appointmentDate: date("appointment_date")
+});
+
 // Insert Schemas
 export const insertGuestSchema = createInsertSchema(guests).omit({ id: true });
 export const insertBudgetItemSchema = createInsertSchema(budgetItems).omit({ id: true });
 export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true });
+export const insertVendorSchema = createInsertSchema(vendors).omit({ id: true });
 
 // Types
 export type Guest = typeof guests.$inferSelect;
 export type BudgetItem = typeof budgetItems.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
+export type Vendor = typeof vendors.$inferSelect;
 export type InsertGuest = z.infer<typeof insertGuestSchema>;
 export type InsertBudgetItem = z.infer<typeof insertBudgetItemSchema>;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type InsertVendor = z.infer<typeof insertVendorSchema>;

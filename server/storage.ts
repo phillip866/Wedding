@@ -35,204 +35,126 @@ export interface IStorage {
   deleteVendor(id: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private guests: Map<number, Guest>;
-  private budgetItems: Map<number, BudgetItem>;
-  private tasks: Map<number, Task>;
-  private vendors: Map<number, Vendor>;
-  private guestId: number;
-  private budgetId: number;
-  private taskId: number;
-  private vendorId: number;
+import { db } from "./db";
+import { guests, budgetItems, tasks, vendors } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
-  constructor() {
-    this.guests = new Map();
-    this.budgetItems = new Map();
-    this.tasks = new Map();
-    this.vendors = new Map();
-    this.guestId = 1;
-    this.budgetId = 1;
-    this.taskId = 1;
-    this.vendorId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   // Guest Management
   async getGuests(): Promise<Guest[]> {
-    return Array.from(this.guests.values());
+    return await db.select().from(guests);
   }
 
   async getGuest(id: number): Promise<Guest | undefined> {
-    return this.guests.get(id);
+    const [guest] = await db.select().from(guests).where(eq(guests.id, id));
+    return guest;
   }
 
   async createGuest(guest: InsertGuest): Promise<Guest> {
-    const id = this.guestId++;
-    const newGuest: Guest = {
-      id,
-      name: guest.name,
-      email: guest.email ?? null,
-      phone: guest.phone ?? null,
-      category: guest.category,
-      rsvpStatus: guest.rsvpStatus ?? null,
-      plusOne: guest.plusOne ?? null,
-      dietaryRestrictions: guest.dietaryRestrictions ?? null,
-      notes: guest.notes ?? null
-    };
-    this.guests.set(id, newGuest);
+    const [newGuest] = await db.insert(guests).values(guest).returning();
     return newGuest;
   }
 
   async updateGuest(id: number, guest: Partial<InsertGuest>): Promise<Guest | undefined> {
-    const existing = this.guests.get(id);
-    if (!existing) return undefined;
-    const updated: Guest = {
-      ...existing,
-      ...guest,
-      email: guest.email ?? existing.email,
-      phone: guest.phone ?? existing.phone,
-      rsvpStatus: guest.rsvpStatus ?? existing.rsvpStatus,
-      plusOne: guest.plusOne ?? existing.plusOne,
-      dietaryRestrictions: guest.dietaryRestrictions ?? existing.dietaryRestrictions,
-      notes: guest.notes ?? existing.notes
-    };
-    this.guests.set(id, updated);
+    const [updated] = await db
+      .update(guests)
+      .set(guest)
+      .where(eq(guests.id, id))
+      .returning();
     return updated;
   }
 
   async deleteGuest(id: number): Promise<boolean> {
-    return this.guests.delete(id);
+    const result = await db.delete(guests).where(eq(guests.id, id));
+    return !!result.rowCount;
   }
 
   // Budget Management
   async getBudgetItems(): Promise<BudgetItem[]> {
-    return Array.from(this.budgetItems.values());
+    return await db.select().from(budgetItems);
   }
 
   async getBudgetItem(id: number): Promise<BudgetItem | undefined> {
-    return this.budgetItems.get(id);
+    const [item] = await db.select().from(budgetItems).where(eq(budgetItems.id, id));
+    return item;
   }
 
   async createBudgetItem(item: InsertBudgetItem): Promise<BudgetItem> {
-    const id = this.budgetId++;
-    const newItem: BudgetItem = {
-      id,
-      category: item.category,
-      description: item.description,
-      estimatedAmount: item.estimatedAmount,
-      dueDate: item.dueDate ?? null,
-      actualAmount: item.actualAmount ?? null,
-      paid: item.paid ?? null
-    };
-    this.budgetItems.set(id, newItem);
+    const [newItem] = await db.insert(budgetItems).values(item).returning();
     return newItem;
   }
 
   async updateBudgetItem(id: number, item: Partial<InsertBudgetItem>): Promise<BudgetItem | undefined> {
-    const existing = this.budgetItems.get(id);
-    if (!existing) return undefined;
-    const updated: BudgetItem = {
-      ...existing,
-      ...item,
-      dueDate: item.dueDate ?? existing.dueDate,
-      actualAmount: item.actualAmount ?? existing.actualAmount,
-      paid: item.paid ?? existing.paid
-    };
-    this.budgetItems.set(id, updated);
+    const [updated] = await db
+      .update(budgetItems)
+      .set(item)
+      .where(eq(budgetItems.id, id))
+      .returning();
     return updated;
   }
 
   async deleteBudgetItem(id: number): Promise<boolean> {
-    return this.budgetItems.delete(id);
+    const result = await db.delete(budgetItems).where(eq(budgetItems.id, id));
+    return !!result.rowCount;
   }
 
   // Task Management
   async getTasks(): Promise<Task[]> {
-    return Array.from(this.tasks.values());
+    return await db.select().from(tasks);
   }
 
   async getTask(id: number): Promise<Task | undefined> {
-    return this.tasks.get(id);
+    const [task] = await db.select().from(tasks).where(eq(tasks.id, id));
+    return task;
   }
 
   async createTask(task: InsertTask): Promise<Task> {
-    const id = this.taskId++;
-    const newTask: Task = {
-      id,
-      title: task.title,
-      description: task.description ?? null,
-      dueDate: task.dueDate ?? null,
-      completed: task.completed ?? null,
-      priority: task.priority ?? null
-    };
-    this.tasks.set(id, newTask);
+    const [newTask] = await db.insert(tasks).values(task).returning();
     return newTask;
   }
 
   async updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined> {
-    const existing = this.tasks.get(id);
-    if (!existing) return undefined;
-    const updated: Task = {
-      ...existing,
-      ...task,
-      description: task.description ?? existing.description,
-      dueDate: task.dueDate ?? existing.dueDate,
-      completed: task.completed ?? existing.completed,
-      priority: task.priority ?? existing.priority
-    };
-    this.tasks.set(id, updated);
+    const [updated] = await db
+      .update(tasks)
+      .set(task)
+      .where(eq(tasks.id, id))
+      .returning();
     return updated;
   }
 
   async deleteTask(id: number): Promise<boolean> {
-    return this.tasks.delete(id);
+    const result = await db.delete(tasks).where(eq(tasks.id, id));
+    return !!result.rowCount;
   }
 
   // Vendor Management
   async getVendors(): Promise<Vendor[]> {
-    return Array.from(this.vendors.values());
+    return await db.select().from(vendors);
   }
 
   async getVendor(id: number): Promise<Vendor | undefined> {
-    return this.vendors.get(id);
+    const [vendor] = await db.select().from(vendors).where(eq(vendors.id, id));
+    return vendor;
   }
 
   async createVendor(vendor: InsertVendor): Promise<Vendor> {
-    const id = this.vendorId++;
-    const newVendor: Vendor = {
-      id,
-      name: vendor.name,
-      category: vendor.category,
-      email: vendor.email ?? null,
-      phone: vendor.phone ?? null,
-      website: vendor.website ?? null,
-      address: vendor.address ?? null,
-      notes: vendor.notes ?? null,
-      appointmentDate: vendor.appointmentDate ?? null
-    };
-    this.vendors.set(id, newVendor);
+    const [newVendor] = await db.insert(vendors).values(vendor).returning();
     return newVendor;
   }
 
   async updateVendor(id: number, vendor: Partial<InsertVendor>): Promise<Vendor | undefined> {
-    const existing = this.vendors.get(id);
-    if (!existing) return undefined;
-    const updated: Vendor = {
-      ...existing,
-      ...vendor,
-      email: vendor.email ?? existing.email,
-      phone: vendor.phone ?? existing.phone,
-      website: vendor.website ?? existing.website,
-      address: vendor.address ?? existing.address,
-      notes: vendor.notes ?? existing.notes,
-      appointmentDate: vendor.appointmentDate ?? existing.appointmentDate
-    };
-    this.vendors.set(id, updated);
+    const [updated] = await db
+      .update(vendors)
+      .set(vendor)
+      .where(eq(vendors.id, id))
+      .returning();
     return updated;
   }
 
   async deleteVendor(id: number): Promise<boolean> {
-    return this.vendors.delete(id);
+    const result = await db.delete(vendors).where(eq(vendors.id, id));
+    return !!result.rowCount;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

@@ -1,13 +1,9 @@
 import { Express } from "express";
 import { createServer, Server } from "http";
 import { storage } from "./storage";
-import { insertGuestSchema, insertBudgetItemSchema, insertTaskSchema, insertVendorSchema } from "@shared/schema";
+import { insertGuestSchema, insertBudgetItemSchema, insertTaskSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Health check endpoint
-  app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok", time: new Date().toISOString() });
-  });
   // Guest Routes
   app.get("/api/guests", async (_req, res) => {
     const guests = await storage.getGuests();
@@ -115,43 +111,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const success = await storage.deleteTask(id);
     if (!success) {
       return res.status(404).json({ error: "Task not found" });
-    }
-    res.status(204).end();
-  });
-
-  // Vendor Routes
-  app.get("/api/vendors", async (_req, res) => {
-    const vendors = await storage.getVendors();
-    res.json(vendors);
-  });
-
-  app.post("/api/vendors", async (req, res) => {
-    const result = insertVendorSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ error: result.error });
-    }
-    const vendor = await storage.createVendor(result.data);
-    res.status(201).json(vendor);
-  });
-
-  app.patch("/api/vendors/:id", async (req, res) => {
-    const id = parseInt(req.params.id);
-    const result = insertVendorSchema.partial().safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ error: result.error });
-    }
-    const vendor = await storage.updateVendor(id, result.data);
-    if (!vendor) {
-      return res.status(404).json({ error: "Vendor not found" });
-    }
-    res.json(vendor);
-  });
-
-  app.delete("/api/vendors/:id", async (req, res) => {
-    const id = parseInt(req.params.id);
-    const success = await storage.deleteVendor(id);
-    if (!success) {
-      return res.status(404).json({ error: "Vendor not found" });
     }
     res.status(204).end();
   });

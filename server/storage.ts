@@ -1,8 +1,7 @@
 import { 
   type Guest, type InsertGuest,
   type BudgetItem, type InsertBudgetItem,
-  type Task, type InsertTask,
-  type Vendor, type InsertVendor
+  type Task, type InsertTask
 } from "@shared/schema";
 
 export interface IStorage {
@@ -26,135 +25,155 @@ export interface IStorage {
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
-
-  // Vendor Management
-  getVendors(): Promise<Vendor[]>;
-  getVendor(id: number): Promise<Vendor | undefined>;
-  createVendor(vendor: InsertVendor): Promise<Vendor>;
-  updateVendor(id: number, vendor: Partial<InsertVendor>): Promise<Vendor | undefined>;
-  deleteVendor(id: number): Promise<boolean>;
 }
 
-import { db } from "./db";
-import { guests, budgetItems, tasks, vendors } from "@shared/schema";
-import { eq } from "drizzle-orm";
+export class MemStorage implements IStorage {
+  private guests: Map<number, Guest>;
+  private budgetItems: Map<number, BudgetItem>;
+  private tasks: Map<number, Task>;
+  private guestId: number;
+  private budgetId: number;
+  private taskId: number;
 
-export class DatabaseStorage implements IStorage {
+  constructor() {
+    this.guests = new Map();
+    this.budgetItems = new Map();
+    this.tasks = new Map();
+    this.guestId = 1;
+    this.budgetId = 1;
+    this.taskId = 1;
+  }
+
   // Guest Management
   async getGuests(): Promise<Guest[]> {
-    return await db.select().from(guests);
+    return Array.from(this.guests.values());
   }
 
   async getGuest(id: number): Promise<Guest | undefined> {
-    const [guest] = await db.select().from(guests).where(eq(guests.id, id));
-    return guest;
+    return this.guests.get(id);
   }
 
   async createGuest(guest: InsertGuest): Promise<Guest> {
-    const [newGuest] = await db.insert(guests).values(guest).returning();
+    const id = this.guestId++;
+    const newGuest: Guest = {
+      id,
+      name: guest.name,
+      email: guest.email ?? null,
+      phone: guest.phone ?? null,
+      category: guest.category,
+      rsvpStatus: guest.rsvpStatus ?? null,
+      plusOne: guest.plusOne ?? null,
+      dietaryRestrictions: guest.dietaryRestrictions ?? null,
+      notes: guest.notes ?? null
+    };
+    this.guests.set(id, newGuest);
     return newGuest;
   }
 
   async updateGuest(id: number, guest: Partial<InsertGuest>): Promise<Guest | undefined> {
-    const [updated] = await db
-      .update(guests)
-      .set(guest)
-      .where(eq(guests.id, id))
-      .returning();
+    const existing = this.guests.get(id);
+    if (!existing) return undefined;
+    const updated: Guest = {
+      ...existing,
+      ...guest,
+      email: guest.email ?? existing.email,
+      phone: guest.phone ?? existing.phone,
+      rsvpStatus: guest.rsvpStatus ?? existing.rsvpStatus,
+      plusOne: guest.plusOne ?? existing.plusOne,
+      dietaryRestrictions: guest.dietaryRestrictions ?? existing.dietaryRestrictions,
+      notes: guest.notes ?? existing.notes
+    };
+    this.guests.set(id, updated);
     return updated;
   }
 
   async deleteGuest(id: number): Promise<boolean> {
-    const result = await db.delete(guests).where(eq(guests.id, id));
-    return !!result.rowCount;
+    return this.guests.delete(id);
   }
 
   // Budget Management
   async getBudgetItems(): Promise<BudgetItem[]> {
-    return await db.select().from(budgetItems);
+    return Array.from(this.budgetItems.values());
   }
 
   async getBudgetItem(id: number): Promise<BudgetItem | undefined> {
-    const [item] = await db.select().from(budgetItems).where(eq(budgetItems.id, id));
-    return item;
+    return this.budgetItems.get(id);
   }
 
   async createBudgetItem(item: InsertBudgetItem): Promise<BudgetItem> {
-    const [newItem] = await db.insert(budgetItems).values(item).returning();
+    const id = this.budgetId++;
+    const newItem: BudgetItem = {
+      id,
+      category: item.category,
+      description: item.description,
+      estimatedAmount: item.estimatedAmount,
+      dueDate: item.dueDate ?? null,
+      actualAmount: item.actualAmount ?? null,
+      paid: item.paid ?? null
+    };
+    this.budgetItems.set(id, newItem);
     return newItem;
   }
 
   async updateBudgetItem(id: number, item: Partial<InsertBudgetItem>): Promise<BudgetItem | undefined> {
-    const [updated] = await db
-      .update(budgetItems)
-      .set(item)
-      .where(eq(budgetItems.id, id))
-      .returning();
+    const existing = this.budgetItems.get(id);
+    if (!existing) return undefined;
+    const updated: BudgetItem = {
+      ...existing,
+      ...item,
+      dueDate: item.dueDate ?? existing.dueDate,
+      actualAmount: item.actualAmount ?? existing.actualAmount,
+      paid: item.paid ?? existing.paid
+    };
+    this.budgetItems.set(id, updated);
     return updated;
   }
 
   async deleteBudgetItem(id: number): Promise<boolean> {
-    const result = await db.delete(budgetItems).where(eq(budgetItems.id, id));
-    return !!result.rowCount;
+    return this.budgetItems.delete(id);
   }
 
   // Task Management
   async getTasks(): Promise<Task[]> {
-    return await db.select().from(tasks);
+    return Array.from(this.tasks.values());
   }
 
   async getTask(id: number): Promise<Task | undefined> {
-    const [task] = await db.select().from(tasks).where(eq(tasks.id, id));
-    return task;
+    return this.tasks.get(id);
   }
 
   async createTask(task: InsertTask): Promise<Task> {
-    const [newTask] = await db.insert(tasks).values(task).returning();
+    const id = this.taskId++;
+    const newTask: Task = {
+      id,
+      title: task.title,
+      description: task.description ?? null,
+      dueDate: task.dueDate ?? null,
+      completed: task.completed ?? null,
+      priority: task.priority ?? null
+    };
+    this.tasks.set(id, newTask);
     return newTask;
   }
 
   async updateTask(id: number, task: Partial<InsertTask>): Promise<Task | undefined> {
-    const [updated] = await db
-      .update(tasks)
-      .set(task)
-      .where(eq(tasks.id, id))
-      .returning();
+    const existing = this.tasks.get(id);
+    if (!existing) return undefined;
+    const updated: Task = {
+      ...existing,
+      ...task,
+      description: task.description ?? existing.description,
+      dueDate: task.dueDate ?? existing.dueDate,
+      completed: task.completed ?? existing.completed,
+      priority: task.priority ?? existing.priority
+    };
+    this.tasks.set(id, updated);
     return updated;
   }
 
   async deleteTask(id: number): Promise<boolean> {
-    const result = await db.delete(tasks).where(eq(tasks.id, id));
-    return !!result.rowCount;
-  }
-
-  // Vendor Management
-  async getVendors(): Promise<Vendor[]> {
-    return await db.select().from(vendors);
-  }
-
-  async getVendor(id: number): Promise<Vendor | undefined> {
-    const [vendor] = await db.select().from(vendors).where(eq(vendors.id, id));
-    return vendor;
-  }
-
-  async createVendor(vendor: InsertVendor): Promise<Vendor> {
-    const [newVendor] = await db.insert(vendors).values(vendor).returning();
-    return newVendor;
-  }
-
-  async updateVendor(id: number, vendor: Partial<InsertVendor>): Promise<Vendor | undefined> {
-    const [updated] = await db
-      .update(vendors)
-      .set(vendor)
-      .where(eq(vendors.id, id))
-      .returning();
-    return updated;
-  }
-
-  async deleteVendor(id: number): Promise<boolean> {
-    const result = await db.delete(vendors).where(eq(vendors.id, id));
-    return !!result.rowCount;
+    return this.tasks.delete(id);
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new MemStorage();

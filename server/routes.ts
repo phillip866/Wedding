@@ -4,6 +4,10 @@ import { storage } from "./storage";
 import { insertGuestSchema, insertBudgetItemSchema, insertTaskSchema, insertVendorSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", time: new Date().toISOString() });
+  });
   // Guest Routes
   app.get("/api/guests", async (_req, res) => {
     const guests = await storage.getGuests();

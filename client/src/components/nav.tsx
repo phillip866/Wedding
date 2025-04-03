@@ -47,34 +47,37 @@ export default function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-1">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a className={cn(
+              <div key={item.href}>
+                <Link href={item.href} className={cn(
                   "flex items-center space-x-2 px-3 py-2 rounded-md transition-colors",
                   location === item.href 
-                    ? "bg-primary/10 text-primary" 
-                    : "hover:bg-accent hover:text-accent-foreground"
+                    ? "bg-primary/20 text-primary font-medium" 
+                    : "hover:bg-primary/5 hover:text-primary"
                 )}>
                   <item.icon className="h-5 w-5" />
                   <span>{item.label}</span>
-                </a>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
           
           {/* Mobile Navigation */}
           <div className="flex flex-nowrap overflow-auto -mx-4 px-4 md:hidden">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a className={cn(
+              <div key={item.href}>
+                <Link href={item.href} className={cn(
                   "flex flex-col items-center justify-center min-w-[4rem] px-2 py-2 transition-colors",
                   location === item.href 
-                    ? "text-primary" 
-                    : "text-muted-foreground"
+                    ? "text-primary font-medium" 
+                    : "text-muted-foreground hover:text-primary/70"
                 )}>
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className={cn(
+                    "h-5 w-5",
+                    location === item.href && "text-primary"
+                  )} />
                   <span className="text-xs mt-1">{item.label}</span>
-                </a>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
         </div>

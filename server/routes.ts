@@ -1,7 +1,15 @@
 import { Express } from "express";
 import { createServer, Server } from "http";
 import { storage } from "./storage";
-import { insertGuestSchema, insertBudgetItemSchema, insertTaskSchema } from "@shared/schema";
+import { 
+  insertGuestSchema, 
+  insertBudgetItemSchema, 
+  insertTaskSchema, 
+  insertVendorSchema, 
+  insertAppointmentSchema, 
+  insertSeatingPlanSchema,
+  insertUserSettingsSchema
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Guest Routes
@@ -113,6 +121,175 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ error: "Task not found" });
     }
     res.status(204).end();
+  });
+
+  // Vendor Routes
+  app.get("/api/vendors", async (_req, res) => {
+    const vendors = await storage.getVendors();
+    res.json(vendors);
+  });
+
+  app.get("/api/vendors/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const vendor = await storage.getVendor(id);
+    if (!vendor) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+    res.json(vendor);
+  });
+
+  app.post("/api/vendors", async (req, res) => {
+    const result = insertVendorSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const vendor = await storage.createVendor(result.data);
+    res.status(201).json(vendor);
+  });
+
+  app.patch("/api/vendors/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const result = insertVendorSchema.partial().safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const vendor = await storage.updateVendor(id, result.data);
+    if (!vendor) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+    res.json(vendor);
+  });
+
+  app.delete("/api/vendors/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const success = await storage.deleteVendor(id);
+    if (!success) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+    res.status(204).end();
+  });
+
+  // Appointment Routes
+  app.get("/api/appointments", async (_req, res) => {
+    const appointments = await storage.getAppointments();
+    res.json(appointments);
+  });
+
+  app.get("/api/appointments/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const appointment = await storage.getAppointment(id);
+    if (!appointment) {
+      return res.status(404).json({ error: "Appointment not found" });
+    }
+    res.json(appointment);
+  });
+
+  app.post("/api/appointments", async (req, res) => {
+    const result = insertAppointmentSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const appointment = await storage.createAppointment(result.data);
+    res.status(201).json(appointment);
+  });
+
+  app.patch("/api/appointments/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const result = insertAppointmentSchema.partial().safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const appointment = await storage.updateAppointment(id, result.data);
+    if (!appointment) {
+      return res.status(404).json({ error: "Appointment not found" });
+    }
+    res.json(appointment);
+  });
+
+  app.delete("/api/appointments/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const success = await storage.deleteAppointment(id);
+    if (!success) {
+      return res.status(404).json({ error: "Appointment not found" });
+    }
+    res.status(204).end();
+  });
+
+  // Seating Plan Routes
+  app.get("/api/seating-plans", async (_req, res) => {
+    const plans = await storage.getSeatingPlans();
+    res.json(plans);
+  });
+
+  app.get("/api/seating-plans/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const plan = await storage.getSeatingPlan(id);
+    if (!plan) {
+      return res.status(404).json({ error: "Seating plan not found" });
+    }
+    res.json(plan);
+  });
+
+  app.post("/api/seating-plans", async (req, res) => {
+    const result = insertSeatingPlanSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const plan = await storage.createSeatingPlan(result.data);
+    res.status(201).json(plan);
+  });
+
+  app.patch("/api/seating-plans/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const result = insertSeatingPlanSchema.partial().safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const plan = await storage.updateSeatingPlan(id, result.data);
+    if (!plan) {
+      return res.status(404).json({ error: "Seating plan not found" });
+    }
+    res.json(plan);
+  });
+
+  app.delete("/api/seating-plans/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const success = await storage.deleteSeatingPlan(id);
+    if (!success) {
+      return res.status(404).json({ error: "Seating plan not found" });
+    }
+    res.status(204).end();
+  });
+
+  // User Settings Routes
+  app.get("/api/settings", async (_req, res) => {
+    const settings = await storage.getUserSettings();
+    if (!settings) {
+      return res.status(404).json({ error: "Settings not found" });
+    }
+    res.json(settings);
+  });
+
+  app.post("/api/settings", async (req, res) => {
+    const result = insertUserSettingsSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const settings = await storage.createUserSettings(result.data);
+    res.status(201).json(settings);
+  });
+
+  app.patch("/api/settings/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const result = insertUserSettingsSchema.partial().safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+    const settings = await storage.updateUserSettings(id, result.data);
+    if (!settings) {
+      return res.status(404).json({ error: "Settings not found" });
+    }
+    res.json(settings);
   });
 
   const httpServer = createServer(app);

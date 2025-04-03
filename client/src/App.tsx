@@ -7,10 +7,7 @@ import Dashboard from "@/pages/dashboard";
 import Guests from "@/pages/guests";
 import Budget from "@/pages/budget";
 import Tasks from "@/pages/tasks";
-import Vendors from "@/pages/vendors";
 import Appointments from "@/pages/appointments";
-import Seating from "@/pages/seating";
-import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
 import { apiRequest } from "./lib/queryClient";
@@ -22,10 +19,7 @@ function Router() {
       <Route path="/guests" component={Guests} />
       <Route path="/budget" component={Budget} />
       <Route path="/tasks" component={Tasks} />
-      <Route path="/vendors" component={Vendors} />
       <Route path="/appointments" component={Appointments} />
-      <Route path="/seating" component={Seating} />
-      <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
   );

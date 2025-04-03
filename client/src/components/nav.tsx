@@ -25,10 +25,7 @@ export default function Navigation() {
     { href: "/guests", icon: UsersIcon, label: "Guest List" },
     { href: "/budget", icon: WalletIcon, label: "Budget" },
     { href: "/tasks", icon: CheckSquareIcon, label: "Tasks" },
-    { href: "/vendors", icon: GlobeIcon, label: "Vendors" },
-    { href: "/appointments", icon: CalendarIcon, label: "Appointments" },
-    { href: "/seating", icon: UserCheckIcon, label: "Seating Chart" },
-    { href: "/settings", icon: SettingsIcon, label: "Settings" }
+    { href: "/appointments", icon: CalendarIcon, label: "Appointments" }
   ];
 
   const premium = settings?.isPremium;
@@ -62,11 +59,11 @@ export default function Navigation() {
           </div>
           
           {/* Mobile Navigation */}
-          <div className="flex flex-nowrap overflow-auto -mx-4 px-4 md:hidden">
+          <div className="flex justify-between items-center space-x-2 md:hidden">
             {navItems.map((item) => (
               <div key={item.href}>
                 <Link href={item.href} className={cn(
-                  "flex flex-col items-center justify-center min-w-[4rem] px-2 py-2 transition-colors",
+                  "flex flex-col items-center justify-center px-2 py-2 transition-colors",
                   location === item.href 
                     ? "text-primary font-medium" 
                     : "text-muted-foreground hover:text-primary/70"

@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, date, decimal, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, date, decimal, timestamp, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -77,9 +77,21 @@ export const seatingPlans = pgTable("seating_plans", {
   location: text("location") // Position on the venue map
 });
 
+// Users
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  email: text("email"),
+  fullName: text("full_name"),
+  role: text("role").default("user"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // User Settings
 export const userSettings = pgTable("user_settings", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
   weddingDate: date("wedding_date"),
   coupleNames: text("couple_names"),
   venueAddress: text("venue_address"),
@@ -94,6 +106,7 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true });
 export const insertVendorSchema = createInsertSchema(vendors).omit({ id: true });
 export const insertAppointmentSchema = createInsertSchema(appointments).omit({ id: true });
 export const insertSeatingPlanSchema = createInsertSchema(seatingPlans).omit({ id: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({ id: true });
 
 // Types
@@ -103,6 +116,7 @@ export type Task = typeof tasks.$inferSelect;
 export type Vendor = typeof vendors.$inferSelect;
 export type Appointment = typeof appointments.$inferSelect;
 export type SeatingPlan = typeof seatingPlans.$inferSelect;
+export type User = typeof users.$inferSelect;
 export type UserSettings = typeof userSettings.$inferSelect;
 
 export type InsertGuest = z.infer<typeof insertGuestSchema>;
@@ -111,4 +125,5 @@ export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type InsertVendor = z.infer<typeof insertVendorSchema>;
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type InsertSeatingPlan = z.infer<typeof insertSeatingPlanSchema>;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;

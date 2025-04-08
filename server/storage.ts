@@ -5,10 +5,27 @@ import {
   type Vendor, type InsertVendor,
   type Appointment, type InsertAppointment,
   type SeatingPlan, type InsertSeatingPlan,
+  type User, type InsertUser,
   type UserSettings, type InsertUserSettings
 } from "@shared/schema";
+import session from "express-session";
+import createMemoryStore from "memorystore";
+
+// Define the session store type
+type SessionStore = session.Store;
 
 export interface IStorage {
+  // Session Store
+  sessionStore: SessionStore;
+
+  // User Management
+  getUsers(): Promise<User[]>;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
+
   // Guest Management
   getGuests(): Promise<Guest[]>;
   getGuest(id: number): Promise<Guest | undefined>;
@@ -53,6 +70,7 @@ export interface IStorage {
   
   // User Settings Management
   getUserSettings(): Promise<UserSettings | undefined>;
+  getUserSettingsByUserId(userId: number): Promise<UserSettings | undefined>;
   createUserSettings(settings: InsertUserSettings): Promise<UserSettings>;
   updateUserSettings(id: number, settings: Partial<InsertUserSettings>): Promise<UserSettings | undefined>;
 }
@@ -64,7 +82,10 @@ export class MemStorage implements IStorage {
   private vendors: Map<number, Vendor>;
   private appointments: Map<number, Appointment>;
   private seatingPlans: Map<number, SeatingPlan>;
+  private users: Map<number, User>;
   private userSettings: Map<number, UserSettings>;
+  
+  public sessionStore: SessionStore;
   
   private guestId: number;
   private budgetId: number;
@@ -72,6 +93,7 @@ export class MemStorage implements IStorage {
   private vendorId: number;
   private appointmentId: number;
   private seatingPlanId: number;
+  private userId: number;
   private userSettingsId: number;
 
   constructor() {
@@ -81,7 +103,13 @@ export class MemStorage implements IStorage {
     this.vendors = new Map();
     this.appointments = new Map();
     this.seatingPlans = new Map();
+    this.users = new Map();
     this.userSettings = new Map();
+    
+    const MemoryStore = createMemoryStore(session);
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // Prune expired entries every 24h
+    });
     
     this.guestId = 1;
     this.budgetId = 1;
@@ -89,7 +117,54 @@ export class MemStorage implements IStorage {
     this.vendorId = 1;
     this.appointmentId = 1;
     this.seatingPlanId = 1;
+    this.userId = 1;
     this.userSettingsId = 1;
+  }
+  
+  // User Management
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+  
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+  
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.username === username);
+  }
+  
+  async createUser(user: InsertUser): Promise<User> {
+    const id = this.userId++;
+    const newUser: User = {
+      id,
+      username: user.username,
+      password: user.password,
+      email: user.email ?? null,
+      fullName: user.fullName ?? null,
+      createdAt: new Date(),
+      role: user.role ?? 'user'
+    };
+    this.users.set(id, newUser);
+    return newUser;
+  }
+  
+  async updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined> {
+    const existing = this.users.get(id);
+    if (!existing) return undefined;
+    const updated: User = {
+      ...existing,
+      ...user,
+      email: user.email ?? existing.email,
+      fullName: user.fullName ?? existing.fullName,
+      role: user.role ?? existing.role
+    };
+    this.users.set(id, updated);
+    return updated;
+  }
+  
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id);
   }
 
   // Guest Management
@@ -372,11 +447,18 @@ export class MemStorage implements IStorage {
     const settings = Array.from(this.userSettings.values());
     return settings.length > 0 ? settings[0] : undefined;
   }
+  
+  async getUserSettingsByUserId(userId: number): Promise<UserSettings | undefined> {
+    return Array.from(this.userSettings.values()).find(
+      settings => settings.userId === userId
+    );
+  }
 
   async createUserSettings(settings: InsertUserSettings): Promise<UserSettings> {
     const id = this.userSettingsId++;
     const newSettings: UserSettings = {
       id,
+      userId: settings.userId,
       weddingDate: settings.weddingDate ?? null,
       coupleNames: settings.coupleNames ?? null,
       venueAddress: settings.venueAddress ?? null,
@@ -393,6 +475,7 @@ export class MemStorage implements IStorage {
     const updated: UserSettings = {
       ...existing,
       ...settings,
+      userId: settings.userId ?? existing.userId,
       weddingDate: settings.weddingDate ?? existing.weddingDate,
       coupleNames: settings.coupleNames ?? existing.coupleNames,
       venueAddress: settings.venueAddress ?? existing.venueAddress,

@@ -1,7 +1,6 @@
 import { Express } from "express";
 import { createServer, Server } from "http";
 import { storage } from "./storage";
-import { setupAuth } from "./auth";
 import { 
   insertGuestSchema, 
   insertBudgetItemSchema, 
@@ -13,8 +12,6 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
-  setupAuth(app);
   // Guest Routes
   app.get("/api/guests", async (_req, res) => {
     const guests = await storage.getGuests();
